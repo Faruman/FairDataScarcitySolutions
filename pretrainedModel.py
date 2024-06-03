@@ -5,14 +5,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor, AdaBoostClassifier, AdaBoostRegressor
 from sklearn.preprocessing import PolynomialFeatures, OneHotEncoder
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import f_classif, f_regression
 from xgboost import XGBClassifier, XGBRegressor
-from sdv.metadata import SingleTableMetadata
-from sdv.single_table import CTGANSynthesizer, TVAESynthesizer
 from sklearn.metrics import f1_score, accuracy_score, mean_squared_error, r2_score, label_ranking_loss, label_ranking_average_precision_score
 from fairlearn.metrics import demographic_parity_ratio, equalized_odds_ratio
-import seaborn as sns
 
 
 def get_targetFilterAndSupplement(df, filter_cols: list = ["year", "topregion", "region", "subregion", "ethnicity", "cs-white_ratio", "cs-non-white_ratio"],

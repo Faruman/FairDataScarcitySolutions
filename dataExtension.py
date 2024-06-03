@@ -13,7 +13,6 @@ from sdv.single_table import CTGANSynthesizer, TVAESynthesizer
 from sdv.sampling import Condition
 from sklearn.metrics import f1_score, accuracy_score, mean_squared_error, r2_score, label_ranking_loss, label_ranking_average_precision_score
 from fairlearn.metrics import demographic_parity_ratio, equalized_odds_ratio
-import seaborn as sns
 
 
 def get_targetFilterAndSupplement(df, filter_cols: list = ["year", "topregion", "region", "subregion", "ethnicity", "cs-white_ratio", "cs-non-white_ratio"],
