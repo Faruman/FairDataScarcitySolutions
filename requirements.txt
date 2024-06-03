@@ -5,5 +5,3 @@ scikit-learn == 1.5.0
 fairlearn == 0.10.0
 modAL-python == 0.4.2.1
 flwr==1.8.0
-flwr_datasets==0.1.0
-ait360==0.6.1
