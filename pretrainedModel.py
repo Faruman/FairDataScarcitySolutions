@@ -69,9 +69,7 @@ for region in tqdm(regions):
         temp = {"region": region, "cv_i": cv_i, "type": "PT1"}
         clf = XGBClassifier(device="cuda", n_estimators= 500)
         clf.fit(share_region_train, share_region_train_target["tg-default"])
-        clf.save_model("./temp/xgb_model.json")
-        clf = XGBClassifier(device="cuda")
-        clf.fit(region_train, region_train_target["tg-default"], xgb_model="./temp/xgb_model.json")
+        clf.fit(region_train, region_train_target["tg-default"], xgb_model= clf)
         preds = clf.predict(region_test)
         temp["def_accuracy"] = accuracy_score(region_test_target["tg-default"], preds)
         temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
@@ -80,9 +78,7 @@ for region in tqdm(regions):
 
         clf = XGBClassifier(device="cuda", n_estimators= 500)
         clf.fit(share_region_train, share_region_train_target["tg-int_rate_cat"])
-        clf.save_model("./temp/xgb_model.json")
-        clf = XGBClassifier(device="cuda")
-        clf.fit(region_train, region_train_target["tg-int_rate_cat"], xgb_model="./temp/xgb_model.json")
+        clf.fit(region_train, region_train_target["tg-int_rate_cat"], xgb_model= clf)
         preds = clf.predict(region_test)
         probs = clf.predict_proba(region_test)
         temp["int_accuracy"] = accuracy_score(region_test_target["tg-int_rate_cat"], preds)
@@ -93,9 +89,7 @@ for region in tqdm(regions):
 
         reg = XGBRegressor(device="cuda", n_estimators= 500)
         reg.fit(share_region_train, share_region_train_target["tg-int_rate"])
-        reg.save_model("./temp/xgb_model.json")
-        reg = XGBRegressor(device="cuda")
-        reg.fit(region_train, region_train_target["tg-int_rate"], xgb_model="./temp/xgb_model.json")
+        reg.fit(region_train, region_train_target["tg-int_rate"], xgb_model=reg)
         preds = reg.predict(region_test)
         temp["int_rmse"] = np.sqrt(mean_squared_error(region_test_target["tg-int_rate"], preds))
         temp["int_r2"] = r2_score(region_test_target["tg-int_rate"], preds)
