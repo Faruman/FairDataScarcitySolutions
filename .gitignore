@@ -1,0 +1,7 @@
+.idea
+.tmp.drivedownload
+.tmp.driveupload
+data/raw
+data/*.csv
+temp
+*/old/*
