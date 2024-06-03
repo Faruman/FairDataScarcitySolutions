@@ -8,10 +8,6 @@ from sklearn.preprocessing import PolynomialFeatures, OneHotEncoder
 from xgboost import XGBClassifier, XGBRegressor
 from sklearn.metrics import f1_score, accuracy_score, mean_squared_error, r2_score, label_ranking_loss, label_ranking_average_precision_score
 from fairlearn.metrics import demographic_parity_ratio, equalized_odds_ratio
-privileged_groups = [{"ethnicity": "white"}]
-unprivileged_groups = [{"ethnicity": "black"}]
-
-import seaborn as sns
 
 
 def get_targetFilterAndSupplement(df, filter_cols: list = ["year", "topregion", "region", "subregion", "ethnicity", "cs-white_ratio", "cs-non-white_ratio"],
