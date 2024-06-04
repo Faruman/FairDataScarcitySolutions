@@ -40,7 +40,7 @@ regions = list(regions.loc[regions > 1].index)
 # train model for different regions
 results = pd.DataFrame()
 for region in tqdm(regions):
-    for cv_i in range(15):
+    for cv_i in range(5):
         # splititng data into train and test
         train_val, test = train_test_split(df, test_size=0.25, random_state=cv_i)
         train, val = train_test_split(train_val, test_size=0.0625, random_state=cv_i)
@@ -80,9 +80,9 @@ for region in tqdm(regions):
         temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
         temp["def_demoPar"] = demographic_parity_ratio(region_test_target["tg-default"], preds, sensitive_features= region_test_filter["ethnicity"])
         temp["def_equOdds"] = equalized_odds_ratio(region_test_target["tg-default"], preds, sensitive_features= region_test_filter["ethnicity"])
-        white_adv = probs[region_test_filter["ethnicity"] == "non-white"].mean() - probs[region_test_filter["ethnicity"] == "white"].mean()
-        white_adv_source = region_test_target["tg-default"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-default"][region_test_filter["ethnicity"] == "white"].mean()
-        temp["def_normDiffInPred"] = white_adv / white_adv_source
+        temp["def_DiffInPred"] = probs[region_test_filter["ethnicity"] == "non-white"].mean() - probs[region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_DiffInSource"] = region_test_target["tg-default"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-default"][region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_normDiffInPred"] = temp["def_DiffInPred"] / temp["def_DiffInSource"]
 
         clf = XGBClassifier(device="cuda")
         clf.fit(region_train_poly_select, region_train_target["tg-int_rate_cat"])
@@ -102,9 +102,9 @@ for region in tqdm(regions):
         preds = reg.predict(region_test_poly_select)
         temp["int_rmse"] = np.sqrt(mean_squared_error(region_test_target["tg-int_rate"], preds))
         temp["int_r2"] = r2_score(region_test_target["tg-int_rate"], preds)
-        white_adv = preds[region_test_filter["ethnicity"] == "non-white"].mean() - preds[region_test_filter["ethnicity"] == "white"].mean()
-        white_adv_source = region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "white"].mean()
-        temp["int_normDiffInPred"] = white_adv / white_adv_source
+        temp["int_DiffInPred"] = preds[region_test_filter["ethnicity"] == "non-white"].mean() - preds[region_test_filter["ethnicity"] == "white"].mean()
+        temp["int_DiffInSource"] = region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "white"].mean()
+        temp["int_normDiffInPred"] = temp["int_DiffInPred"] / temp["int_DiffInSource"]
 
         results = pd.concat((results, pd.DataFrame(temp, index=[0])))
 
@@ -124,10 +124,13 @@ for region in tqdm(regions):
         clf = XGBClassifier(device="cuda")
         clf.fit(pd.concat((region_train, region_train_synth), axis=0), pd.concat((region_train_target["tg-default"], region_train_target_synth["tg-default"]), axis=0))
         preds = clf.predict(region_test)
-        temp["accuracy"] = accuracy_score(region_test_target["tg-default"], preds)
-        temp["f1"] = f1_score(region_test_target["tg-default"], preds)
+        temp["def_accuracy"] = accuracy_score(region_test_target["tg-default"], preds)
+        temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
         temp["def_demoPar"] = demographic_parity_ratio(region_test_target["tg-default"], preds, sensitive_features=region_test_filter["ethnicity"])
         temp["def_equOdds"] = equalized_odds_ratio(region_test_target["tg-default"], preds, sensitive_features=region_test_filter["ethnicity"])
+        temp["def_DiffInPred"] = probs[region_test_filter["ethnicity"] == "non-white"].mean() - probs[region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_DiffInSource"] = region_test_target["tg-default"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-default"][region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_normDiffInPred"] = temp["def_DiffInPred"] / temp["def_DiffInSource"]
 
         target_vc = region_train_target["tg-int_rate_cat"].value_counts()
         region_train_synth_conds = [Condition(num_rows= target_vc.iloc[0] - target_vc[x], column_values={"tg-int_rate_cat": x}) for x in target_vc.index[1:]]
@@ -154,12 +157,12 @@ for region in tqdm(regions):
         reg = XGBRegressor(device="cuda")
         reg.fit(pd.concat((region_train, region_train_synth), axis=0), pd.concat((region_train_target["tg-int_rate"], region_train_target_synth["tg-int_rate"]), axis=0))
         preds = reg.predict(region_test)
-        temp["rmse"] = np.sqrt(mean_squared_error(region_test_target["tg-int_rate"], preds))
-        temp["r2"] = r2_score(region_test_target["tg-int_rate"], preds)
+        temp["int_rmse"] = np.sqrt(mean_squared_error(region_test_target["tg-int_rate"], preds))
+        temp["int_r2"] = r2_score(region_test_target["tg-int_rate"], preds)
         results = pd.concat((results, pd.DataFrame(temp, index=[0])))
-        white_adv = preds[region_test_filter["ethnicity"] == "non-white"].mean() - preds[region_test_filter["ethnicity"] == "white"].mean()
-        white_adv_source = region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "white"].mean()
-        temp["int_normDiffInPred"] = white_adv / white_adv_source
+        temp["int_DiffInPred"] = preds[region_test_filter["ethnicity"] == "non-white"].mean() - preds[region_test_filter["ethnicity"] == "white"].mean()
+        temp["int_DiffInSource"] = region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "white"].mean()
+        temp["int_normDiffInPred"] = temp["int_DiffInPred"] / temp["int_DiffInSource"]
 
         results = pd.concat((results, pd.DataFrame(temp, index=[0])))
 

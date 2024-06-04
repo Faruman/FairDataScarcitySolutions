@@ -8,6 +8,8 @@ for file in glob("./results/sub/*.xlsx"):
     sub_df = pd.read_excel(file)
     df = pd.concat((df, sub_df), axis=0)
 
+# TODO: implement outlier removal
+
 # normalize by baseline
 df_baseline = df.loc[df["type"] == "baseline"]
 df_results = df.loc[df["type"] != "baseline"]
