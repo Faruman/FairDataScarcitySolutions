@@ -5,3 +5,5 @@ scikit-learn == 1.5.0
 fairlearn == 0.10.0
 modAL-python == 0.4.2.1
 flwr==1.8.0
+xgboost==2.0.3
+sdv==1.13.1

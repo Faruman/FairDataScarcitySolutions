@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor, AdaBoostClassifier, AdaBoostRegressor
-from sklearn.preprocessing import PolynomialFeatures, OneHotEncodern
+from sklearn.preprocessing import PolynomialFeatures, OneHotEncoder
 from xgboost import XGBClassifier, XGBRegressor
 from sklearn.metrics import f1_score, accuracy_score, mean_squared_error, r2_score, label_ranking_loss, label_ranking_average_precision_score
 from fairlearn.metrics import demographic_parity_ratio, equalized_odds_ratio

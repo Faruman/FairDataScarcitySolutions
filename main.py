@@ -17,45 +17,45 @@ for score in ["def_accuracy", "def_f1", "def_demoPar", "def_equOdds", "int_accur
 
 # default prediction
 ## performance
-#sns.barplot(data=df_results, x="type", y="def_accuracy_excs")
+#sns.barplot(data=df_results, x="type", y="def_accuracy_excs", ci=None)
 #plt.show()
 
-#sns.barplot(data=df_results, x="type", y="def_f1_excs")
+#sns.barplot(data=df_results, x="type", y="def_f1_excs", ci=None)
 #plt.show()
 
 ## fairness
-#sns.barplot(data=df_results, x="type", y="def_demoPar_excs")
+#sns.barplot(data=df_results, x="type", y="def_demoPar_excs", ci=None)
 #plt.show()
 
-#sns.barplot(data=df_results, x="type", y="def_equOdds_excs")
+#sns.barplot(data=df_results, x="type", y="def_equOdds_excs", ci=None)
 #plt.show()
 
 # interest rate prediction
 # Classification
 ## performance
-#sns.barplot(data=df_results, x="type", y="int_accuracy_excs")
+#sns.barplot(data=df_results, x="type", y="int_accuracy_excs", ci=None)
 #plt.show()
 
-#sns.barplot(data=df_results, x="type", y="int_f1_excs")
+#sns.barplot(data=df_results, x="type", y="int_f1_excs", ci=None)
 #plt.show()
 
-#sns.barplot(data=df_results, x="type", y="int_lrl_excs")
+#sns.barplot(data=df_results, x="type", y="int_lrl_excs", ci=None)
 #plt.show()
 
-#sns.barplot(data=df_results, x="type", y="int_lrp_excs")
+#sns.barplot(data=df_results, x="type", y="int_lrp_excs", ci=None)
 #plt.show()
 
-#sns.barplot(data=df_results, x="type", y="int_demoPar_excs")
+#sns.barplot(data=df_results, x="type", y="int_demoPar_excs", ci=None)
 #plt.show()
 
 # Regression
 ## performance
-sns.barplot(data=df_results, x="type", y="int_rmse_excs")
+sns.barplot(data=df_results, x="type", y="int_rmse_excs", ci=None)
 plt.show()
 
-sns.barplot(data=df_results, x="type", y="int_r2_excs")
+sns.barplot(data=df_results, x="type", y="int_r2_excs", ci=None)
 plt.show()
 
 ## fairness
-sns.barplot(data=df_results, x="type", y="int_normDiffInPred_excs")
+sns.barplot(data=df_results, x="type", y="int_normDiffInPred_excs", ci=None)
 plt.show()
