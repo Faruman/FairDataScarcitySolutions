@@ -5,3 +5,4 @@ data/raw
 data/*.csv
 temp
 */old/*
+*/paper/*
