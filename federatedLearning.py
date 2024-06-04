@@ -95,6 +95,7 @@ for cv_i in tqdm(range(15)):
 
     num_exRounds = 10
     shared_model = None
+    region_models = {}
     #init_idx = np.random.randint(train.shape[0], size=500)
     #shared_model.fit(train.iloc[init_idx], train_target["tg-default"].iloc[init_idx])
     #shared_model.fit(pd.DataFrame(np.random.rand(2,train.shape[1]), columns= train.columns), pd.Series([0, 1]))
@@ -122,6 +123,7 @@ for cv_i in tqdm(range(15)):
             #region_model_bst_bytes = bytes(region_model_bst)
             #shared_boosters.append(region_model_bst_bytes)
             shared_boosters.append(region_model_bst)
+            region_models[region] = copy.deepcopy(region_model)
 
             # For testing
             #region_model.get_booster().load_model(bytearray(bytes(json.dumps(region_model_bst), "utf-8")))
@@ -149,7 +151,7 @@ for cv_i in tqdm(range(15)):
 
         # create baseline model
         temp = {"region": region, "cv_i": cv_i, "type": "FL1"}
-        preds = shared_model.predict(region_test)
+        preds = region_models[region].predict(region_test)
         temp["def_accuracy"] = accuracy_score(region_test_target["tg-default"], preds)
         temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
         temp["def_demoPar"] = demographic_parity_ratio(region_test_target["tg-default"], preds, sensitive_features= region_test_filter["ethnicity"])
@@ -159,6 +161,7 @@ for cv_i in tqdm(range(15)):
 
     num_exRounds = 10
     shared_model = None
+    region_models = {}
     for i in range(num_exRounds):
         shared_boosters = []
         init_shared_model = []
@@ -182,6 +185,7 @@ for cv_i in tqdm(range(15)):
             #region_model_bst_bytes = bytes(region_model_bst)
             #shared_boosters.append(region_model_bst_bytes)
             shared_boosters.append(region_model_bst)
+            region_models[region] = copy.deepcopy(region_model)
 
             # For testing
             #region_model.get_booster().load_model(bytearray(bytes(json.dumps(region_model_bst), "utf-8")))
@@ -209,8 +213,8 @@ for cv_i in tqdm(range(15)):
 
         # create baseline model
         temp = {"region": region, "cv_i": cv_i, "type": "FL1"}
-        preds = shared_model.predict(region_test)
-        probs = shared_model.predict_proba(region_test)
+        preds = region_models[region].predict(region_test)
+        probs = region_models[region].predict_proba(region_test)
         temp["int_accuracy"] = accuracy_score(region_test_target["tg-int_rate_cat"], preds)
         temp["int_f1"] = f1_score(region_test_target["tg-int_rate_cat"], preds, average="macro")
         temp["int_lrl"] = label_ranking_loss(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
@@ -221,6 +225,7 @@ for cv_i in tqdm(range(15)):
 
     num_exRounds = 10
     shared_model = None
+    region_models = {}
     for i in range(num_exRounds):
         shared_boosters = []
         init_shared_model = []
@@ -244,6 +249,7 @@ for cv_i in tqdm(range(15)):
             # region_model_bst_bytes = bytes(region_model_bst)
             # shared_boosters.append(region_model_bst_bytes)
             shared_boosters.append(region_model_bst)
+            region_models[region] = copy.deepcopy(region_model)
 
             # For testing
             # region_model.get_booster().load_model(bytearray(bytes(json.dumps(region_model_bst), "utf-8")))
@@ -271,7 +277,7 @@ for cv_i in tqdm(range(15)):
 
         # create baseline model
         temp = {"region": region, "cv_i": cv_i, "type": "FL1"}
-        preds = shared_model.predict(region_test)
+        preds = region_models[region].predict(region_test)
         temp["int_rmse"] = np.sqrt(mean_squared_error(region_test_target["tg-int_rate"], preds))
         temp["int_r2"] = r2_score(region_test_target["tg-int_rate"], preds)
         white_adv = preds[region_test_filter["ethnicity"] == "non-white"].mean() - preds[region_test_filter["ethnicity"] == "white"].mean()
