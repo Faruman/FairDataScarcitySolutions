@@ -152,10 +152,14 @@ for cv_i in tqdm(range(15)):
         # create baseline model
         temp = {"region": region, "cv_i": cv_i, "type": "FL1"}
         preds = region_models[region].predict(region_test)
+        probs = region_models[region].predict_proba(region_test)[:, 1]
         temp["def_accuracy"] = accuracy_score(region_test_target["tg-default"], preds)
         temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
         temp["def_demoPar"] = demographic_parity_ratio(region_test_target["tg-default"], preds, sensitive_features= region_test_filter["ethnicity"])
         temp["def_equOdds"] = equalized_odds_ratio(region_test_target["tg-default"], preds, sensitive_features= region_test_filter["ethnicity"])
+        white_adv = probs[region_test_filter["ethnicity"] == "non-white"].mean() - probs[region_test_filter["ethnicity"] == "white"].mean()
+        white_adv_source = region_test_target["tg-default"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-default"][region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_normDiffInPred"] = white_adv / white_adv_source
 
         results = pd.concat((results, pd.DataFrame(temp, index=[0])))
 

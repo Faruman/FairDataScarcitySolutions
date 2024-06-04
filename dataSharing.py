@@ -66,10 +66,14 @@ for region in tqdm(regions):
         clf = XGBClassifier(device="cuda", n_estimators= 500)
         clf.fit(pd.concat((region_train, share_region_train, share_region_test), axis=0), pd.concat((region_train_target["tg-default"], share_region_train_target["tg-default"], share_region_test_target["tg-default"]), axis=0))
         preds = clf.predict(region_test)
+        probs = clf.predict_proba(region_test)[:, 1]
         temp["def_accuracy"] = accuracy_score(region_test_target["tg-default"], preds)
         temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
         temp["def_demoPar"] = demographic_parity_ratio(region_test_target["tg-default"], preds, sensitive_features= region_test_filter["ethnicity"])
         temp["def_equOdds"] = equalized_odds_ratio(region_test_target["tg-default"], preds, sensitive_features= region_test_filter["ethnicity"])
+        white_adv = probs[region_test_filter["ethnicity"] == "non-white"].mean() - probs[region_test_filter["ethnicity"] == "white"].mean()
+        white_adv_source = region_test_target["tg-default"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-default"][region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_normDiffInPred"] = white_adv / white_adv_source
 
         clf = XGBClassifier(device="cuda", n_estimators= 500)
         clf.fit(pd.concat((region_train, share_region_train, share_region_test), axis=0), pd.concat((region_train_target["tg-int_rate_cat"], share_region_train_target["tg-int_rate_cat"], share_region_test_target["tg-int_rate_cat"]), axis=0))

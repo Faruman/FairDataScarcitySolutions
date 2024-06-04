@@ -82,10 +82,14 @@ for region in tqdm(regions):
             learner.teach(query_inst, y_new.values)
             temp_region_val, temp_region_val_target = temp_region_val.drop(temp_region_val.index[query_idx]), temp_region_val_target.drop(temp_region_val.index[query_idx])
         preds = learner.predict(region_test)
+        probs = learner.predict_proba(region_test)[:, 1]
         temp["def_accuracy"] = accuracy_score(region_test_target["tg-default"], preds)
         temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
         temp["def_demoPar"] = demographic_parity_ratio(region_test_target["tg-default"], preds, sensitive_features=region_test_filter["ethnicity"])
         temp["def_equOdds"] = equalized_odds_ratio(region_test_target["tg-default"], preds, sensitive_features=region_test_filter["ethnicity"])
+        white_adv = probs[region_test_filter["ethnicity"] == "non-white"].mean() - probs[region_test_filter["ethnicity"] == "white"].mean()
+        white_adv_source = region_test_target["tg-default"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-default"][region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_normDiffInPred"] = white_adv / white_adv_source
 
         learner = ActiveLearner(estimator=XGBClassifier(device="cuda", n_estimators= 500), query_strategy=uncertainty_sampling, X_training=region_train.values, y_training=region_train_target["tg-int_rate_cat"].values)
         temp_region_val = region_val
