@@ -39,7 +39,7 @@ regions = list(regions.loc[regions > 1].index)
 # train model for different regions
 results = pd.DataFrame()
 for region in tqdm(regions):
-    for cv_i in range(5):
+    for cv_i in range(30):
         # splititng data into train and test
         train_val, test = train_test_split(df, test_size=0.25, random_state= cv_i)
         train, val = train_test_split(train_val, test_size=0.0625, random_state=cv_i)
@@ -82,36 +82,34 @@ for region in tqdm(regions):
             learner.teach(query_inst, y_new.values)
             temp_region_val, temp_region_val_target = temp_region_val.drop(temp_region_val.index[query_idx]), temp_region_val_target.drop(temp_region_val.index[query_idx])
         preds = learner.predict(region_test)
-        probs = learner.predict_proba(region_test)[:, 1]
         temp["def_accuracy"] = accuracy_score(region_test_target["tg-default"], preds)
         temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
         temp["def_demoPar"] = demographic_parity_ratio(region_test_target["tg-default"], preds, sensitive_features=region_test_filter["ethnicity"])
         temp["def_equOdds"] = equalized_odds_ratio(region_test_target["tg-default"], preds, sensitive_features=region_test_filter["ethnicity"])
-        temp["def_DiffInPred"] = probs[region_test_filter["ethnicity"] == "non-white"].mean() - probs[region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_DiffInPred"] = preds[region_test_filter["ethnicity"] == "non-white"].mean() - preds[region_test_filter["ethnicity"] == "white"].mean()
         temp["def_DiffInSource"] = region_test_target["tg-default"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-default"][region_test_filter["ethnicity"] == "white"].mean()
         temp["def_normDiffInPred"] = temp["def_DiffInPred"] / temp["def_DiffInSource"]
 
-        learner = ActiveLearner(estimator=XGBClassifier(device="cuda", n_estimators= 500), query_strategy=uncertainty_sampling, X_training=region_train.values, y_training=region_train_target["tg-int_rate_cat"].values)
-        temp_region_val = region_val
-        temp_region_val_target = region_val_target
-        for i in range(int(n_queries/20)):
-            query_idx, query_inst = learner.query(temp_region_val.values, n_instances= 20)
-            y_new = temp_region_val_target["tg-int_rate_cat"].iloc[query_idx]
-            learner.teach(query_inst, y_new.values)
-            temp_region_val, temp_region_val_target = temp_region_val.drop(temp_region_val.index[query_idx]), temp_region_val_target.drop(temp_region_val.index[query_idx])
-        preds = learner.predict(region_test)
-        probs = learner.predict_proba(region_test)
-        temp["int_accuracy"] = accuracy_score(region_test_target["tg-int_rate_cat"], preds)
-        temp["int_f1"] = f1_score(region_test_target["tg-int_rate_cat"], preds, average="macro")
-        temp["int_lrl"] = label_ranking_loss(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
-        temp["int_lrp"] = label_ranking_average_precision_score(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
-        temp["int_demoPar"] = demographic_parity_ratio(region_test_target["tg-int_rate_cat"], preds, sensitive_features=region_test_filter["ethnicity"])
+        #learner = ActiveLearner(estimator=XGBClassifier(device="cuda", n_estimators= 500), query_strategy=uncertainty_sampling, X_training=region_train.values, y_training=region_train_target["tg-int_rate_cat"].values)
+        #temp_region_val = region_val
+        #temp_region_val_target = region_val_target
+        #for i in range(int(n_queries/20)):
+        #    query_idx, query_inst = learner.query(temp_region_val.values, n_instances= 20)
+        #    y_new = temp_region_val_target["tg-int_rate_cat"].iloc[query_idx]
+        #    learner.teach(query_inst, y_new.values)
+        #    temp_region_val, temp_region_val_target = temp_region_val.drop(temp_region_val.index[query_idx]), temp_region_val_target.drop(temp_region_val.index[query_idx])
+        #preds = learner.predict(region_test)
+        #probs = learner.predict_proba(region_test)
+        #temp["int_accuracy"] = accuracy_score(region_test_target["tg-int_rate_cat"], preds)
+        #temp["int_f1"] = f1_score(region_test_target["tg-int_rate_cat"], preds, average="macro")
+        #temp["int_lrl"] = label_ranking_loss(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
+        #temp["int_lrp"] = label_ranking_average_precision_score(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
+        #temp["int_demoPar"] = demographic_parity_ratio(region_test_target["tg-int_rate_cat"], preds, sensitive_features=region_test_filter["ethnicity"])
 
         class custom_XGBRegressor(XGBRegressor, BaseEstimator):
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
             def predict_std(self, X):
-                #TODO: implement this in a better way
                 individual_logits = []
                 for tree_ in self.get_booster():
                     individual_logits.append(tree_.predict(xgb.DMatrix(X), output_margin=True))

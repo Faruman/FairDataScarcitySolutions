@@ -40,7 +40,7 @@ regions = list(regions.loc[regions > 1].index)
 # train model for different regions
 results = pd.DataFrame()
 for region in tqdm(regions):
-    for cv_i in range(5):
+    for cv_i in range(30):
         # splititng data into train and test
         train_val, test = train_test_split(df, test_size=0.25, random_state=cv_i)
         train, val = train_test_split(train_val, test_size=0.0625, random_state=cv_i)
@@ -75,24 +75,23 @@ for region in tqdm(regions):
         clf = XGBClassifier(device="cuda")
         clf.fit(region_train_poly_select, region_train_target["tg-default"])
         preds = clf.predict(region_test_poly_select)
-        probs = clf.predict_proba(region_test)[:, 1]
         temp["def_accuracy"] = accuracy_score(region_test_target["tg-default"], preds)
         temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
         temp["def_demoPar"] = demographic_parity_ratio(region_test_target["tg-default"], preds, sensitive_features= region_test_filter["ethnicity"])
         temp["def_equOdds"] = equalized_odds_ratio(region_test_target["tg-default"], preds, sensitive_features= region_test_filter["ethnicity"])
-        temp["def_DiffInPred"] = probs[region_test_filter["ethnicity"] == "non-white"].mean() - probs[region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_DiffInPred"] = preds[region_test_filter["ethnicity"] == "non-white"].mean() - preds[region_test_filter["ethnicity"] == "white"].mean()
         temp["def_DiffInSource"] = region_test_target["tg-default"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-default"][region_test_filter["ethnicity"] == "white"].mean()
         temp["def_normDiffInPred"] = temp["def_DiffInPred"] / temp["def_DiffInSource"]
 
-        clf = XGBClassifier(device="cuda")
-        clf.fit(region_train_poly_select, region_train_target["tg-int_rate_cat"])
-        preds = clf.predict(region_test_poly_select)
-        probs = clf.predict_proba(region_test_poly_select)
-        temp["int_accuracy"] = accuracy_score(region_test_target["tg-int_rate_cat"], preds)
-        temp["int_f1"] = f1_score(region_test_target["tg-int_rate_cat"], preds, average="macro")
-        temp["int_lrl"] = label_ranking_loss(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
-        temp["int_lrp"] = label_ranking_average_precision_score(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
-        temp["int_demoPar"] = demographic_parity_ratio(region_test_target["tg-int_rate_cat"], preds, sensitive_features=region_test_filter["ethnicity"])
+        #clf = XGBClassifier(device="cuda")
+        #clf.fit(region_train_poly_select, region_train_target["tg-int_rate_cat"])
+        #preds = clf.predict(region_test_poly_select)
+        #probs = clf.predict_proba(region_test_poly_select)
+        #temp["int_accuracy"] = accuracy_score(region_test_target["tg-int_rate_cat"], preds)
+        #temp["int_f1"] = f1_score(region_test_target["tg-int_rate_cat"], preds, average="macro")
+        #temp["int_lrl"] = label_ranking_loss(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
+        #temp["int_lrp"] = label_ranking_average_precision_score(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
+        #temp["int_demoPar"] = demographic_parity_ratio(region_test_target["tg-int_rate_cat"], preds, sensitive_features=region_test_filter["ethnicity"])
 
 
         region_train_poly_select = SelectKBest(f_regression, k= int(region_train.shape[1]*1.5)).fit_transform(region_train_poly, region_train_target["tg-int_rate"])
@@ -128,26 +127,26 @@ for region in tqdm(regions):
         temp["def_f1"] = f1_score(region_test_target["tg-default"], preds)
         temp["def_demoPar"] = demographic_parity_ratio(region_test_target["tg-default"], preds, sensitive_features=region_test_filter["ethnicity"])
         temp["def_equOdds"] = equalized_odds_ratio(region_test_target["tg-default"], preds, sensitive_features=region_test_filter["ethnicity"])
-        temp["def_DiffInPred"] = probs[region_test_filter["ethnicity"] == "non-white"].mean() - probs[region_test_filter["ethnicity"] == "white"].mean()
+        temp["def_DiffInPred"] = preds[region_test_filter["ethnicity"] == "non-white"].mean() - preds[region_test_filter["ethnicity"] == "white"].mean()
         temp["def_DiffInSource"] = region_test_target["tg-default"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-default"][region_test_filter["ethnicity"] == "white"].mean()
         temp["def_normDiffInPred"] = temp["def_DiffInPred"] / temp["def_DiffInSource"]
 
-        target_vc = region_train_target["tg-int_rate_cat"].value_counts()
-        region_train_synth_conds = [Condition(num_rows= target_vc.iloc[0] - target_vc[x], column_values={"tg-int_rate_cat": x}) for x in target_vc.index[1:]]
-        region_train_synth_comb = synthesizer.sample_from_conditions(conditions=region_train_synth_cond)
-        region_train_synth_comb = pd.DataFrame(region_train_synth_comb, columns=list(region_train.columns) + list(region_train_target.columns))
-        region_train_target_synth = region_train_synth_comb[["tg-default", "tg-int_rate", "tg-int_rate_cat"]]
-        region_train_synth = region_train_synth_comb.drop(columns=["tg-default", "tg-int_rate", "tg-int_rate_cat"])
-        region_train_synth = region_train_synth.astype(dict(zip(list(region_train.columns), region_train.dtypes.reset_index(drop=True).tolist())))
-        clf = XGBClassifier(device="cuda")
-        clf.fit(pd.concat((region_train, region_train_synth), axis=0), pd.concat((region_train_target["tg-int_rate_cat"], region_train_target_synth["tg-int_rate_cat"]), axis=0))
-        preds = clf.predict(region_test)
-        probs = clf.predict_proba(region_test)
-        temp["int_accuracy"] = accuracy_score(region_test_target["tg-int_rate_cat"], preds)
-        temp["int_f1"] = f1_score(region_test_target["tg-int_rate_cat"], preds, average="macro")
-        temp["int_lrl"] = label_ranking_loss(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
-        temp["int_lrp"] = label_ranking_average_precision_score(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
-        temp["int_demoPar"] = demographic_parity_ratio(region_test_target["tg-int_rate_cat"], preds, sensitive_features=region_test_filter["ethnicity"])
+        #target_vc = region_train_target["tg-int_rate_cat"].value_counts()
+        #region_train_synth_conds = [Condition(num_rows= target_vc.iloc[0] - target_vc[x], column_values={"tg-int_rate_cat": x}) for x in target_vc.index[1:]]
+        #region_train_synth_comb = synthesizer.sample_from_conditions(conditions=region_train_synth_cond)
+        #region_train_synth_comb = pd.DataFrame(region_train_synth_comb, columns=list(region_train.columns) + list(region_train_target.columns))
+        #region_train_target_synth = region_train_synth_comb[["tg-default", "tg-int_rate", "tg-int_rate_cat"]]
+        #region_train_synth = region_train_synth_comb.drop(columns=["tg-default", "tg-int_rate", "tg-int_rate_cat"])
+        #region_train_synth = region_train_synth.astype(dict(zip(list(region_train.columns), region_train.dtypes.reset_index(drop=True).tolist())))
+        #clf = XGBClassifier(device="cuda")
+        #clf.fit(pd.concat((region_train, region_train_synth), axis=0), pd.concat((region_train_target["tg-int_rate_cat"], region_train_target_synth["tg-int_rate_cat"]), axis=0))
+        #preds = clf.predict(region_test)
+        #probs = clf.predict_proba(region_test)
+        #temp["int_accuracy"] = accuracy_score(region_test_target["tg-int_rate_cat"], preds)
+        #temp["int_f1"] = f1_score(region_test_target["tg-int_rate_cat"], preds, average="macro")
+        #temp["int_lrl"] = label_ranking_loss(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
+        #temp["int_lrp"] = label_ranking_average_precision_score(OneHotEncoder().fit_transform(region_test_target["tg-int_rate_cat"].values.reshape(-1, 1)), probs)
+        #temp["int_demoPar"] = demographic_parity_ratio(region_test_target["tg-int_rate_cat"], preds, sensitive_features=region_test_filter["ethnicity"])
 
         region_train_synth_comb = synthesizer.sample(num_rows=region_train.shape[0])
         region_train_synth_comb = pd.DataFrame(region_train_synth_comb, columns=list(region_train.columns) + list(region_train_target.columns))
@@ -159,7 +158,6 @@ for region in tqdm(regions):
         preds = reg.predict(region_test)
         temp["int_rmse"] = np.sqrt(mean_squared_error(region_test_target["tg-int_rate"], preds))
         temp["int_r2"] = r2_score(region_test_target["tg-int_rate"], preds)
-        results = pd.concat((results, pd.DataFrame(temp, index=[0])))
         temp["int_DiffInPred"] = preds[region_test_filter["ethnicity"] == "non-white"].mean() - preds[region_test_filter["ethnicity"] == "white"].mean()
         temp["int_DiffInSource"] = region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "non-white"].mean() - region_test_target["tg-int_rate"][region_test_filter["ethnicity"] == "white"].mean()
         temp["int_normDiffInPred"] = temp["int_DiffInPred"] / temp["int_DiffInSource"]

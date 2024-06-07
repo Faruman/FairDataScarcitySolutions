@@ -121,6 +121,14 @@ df["lc-default"] = (df["lc-loan_status"] == "Charged Off").astype(int)
 df = df.loc[(df["cs-white_ratio"] > 0.75) | (df["cs-non-white_ratio"] > 0.75), :]
 df["ethnicity"] = df.loc[:, ["cs-white_ratio", "cs-non-white_ratio"]].idxmax(axis=1).str.split("_").str[0].str.replace("cs-", "")
 
+## evaluate correlation between ethnicity and additional data
+temp = df.loc[:, ["ethnicity", "hg-housing_index", "ec-gdp_growth", "ec-unemployment", "ec-inflation"]]
+temp["ethnicity"] = LabelEncoder().fit_transform(temp["ethnicity"])
+corr_pd1 = temp.loc[:, ["ethnicity", "ec-gdp_growth", "ec-unemployment", "ec-inflation"]].corr()["ethnicity"][1:].mean()
+corr_pd2 = temp.loc[:, ["ethnicity", "hg-housing_index" ]].corr()["ethnicity"][1:].mean()
+print("Avg Correlation between Ethnicity and Economic Data: {}".format(corr_pd1))
+print("Avg Correlation between Ethnicity and Housing Data: {}".format(corr_pd2))
+
 # assign US region based on US state
 df["region"] = df["lc-addr_state"].apply(get_us_region)
 df["subregion"] = df["lc-addr_state"].apply(get_us_econ_region)
@@ -170,6 +178,13 @@ for col in ["lc-loan_amnt", "lc-term", "lc-emp_length", "lc-annual_inc", "lc-fic
        df[col] = normalizerDict[col].fit_transform(df[col].values.reshape(-1, 1))
 with open("./normalizerDict.pkl", "wb") as f:
        pickle.dump(normalizerDict, f)
+
+## descriptive statistics
+def ethnicity_ratio(x):
+       return sum(x == "non-white") / x.count()
+descr = df.groupby("subregion").agg({"region": "count", "tg-default": np.mean, "tg-int_rate": np.mean, "ethnicity": ethnicity_ratio})
+print(descr)
+descr.to_excel("./descriptiveStatistics.xlsx")
 
 # save the preprocessed data
 df.to_csv("./loanDataPreprocessed.csv", index= False)
