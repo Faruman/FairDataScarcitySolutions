@@ -6,3 +6,6 @@ data/*.csv
 temp
 */old/*
 */paper/*
+*private_*
+*/sub/30/*
+*/sub/15/*
