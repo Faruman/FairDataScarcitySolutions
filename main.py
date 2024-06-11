@@ -95,6 +95,8 @@ plt.suptitle("Fairness Comparison DSS methods")
 plt.savefig("./results/figures/def_fairnessComparison.png")
 plt.show()
 
+print("Correlation Performance / Fairness: {}".format(perf_df_norm_filtered[["def_f1_excs", "def_DiffInPred"]].corr()))
+
 ## test for statistical difference in fairness per dss type vs baseline/
 stats_test_dict = {}
 types = perf_df_norm_filtered["type"].unique()
@@ -166,3 +168,5 @@ for type in types:
 stats_test_df = pd.DataFrame(stats_test_dict)
 stats_test_df.to_excel("./results/int_statisticalComparison.xlsx")
 print(stats_test_df)
+
+print("Correlation Performance / Fairness: {}".format(perf_df_norm_filtered[["int_r2_excs", "def_DiffInPred"]].corr()))
