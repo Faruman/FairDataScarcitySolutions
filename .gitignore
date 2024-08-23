@@ -1,5 +1,5 @@
-FairnessEvaluation/data/raw
-FairnessEvaluation/data/*.csv
+Step3_FairnessAndPerformanceEvaluation/data/raw
+Step3_FairnessAndPerformanceEvaluation/data/*.csv
 */old/*
 */paper/*
 *private_*
