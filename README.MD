@@ -1,6 +1,6 @@
 # Not enough Data to be Fair? Evaluating Fairness Implications of Data Scarcity Solutions (Online Appendix)
 
-The following repository contains the online appendix for the paper "Not enough Data to be Fair? Evaluating Fairness Implications of Data Scarcity Solutions". It not only provides the python code for all experiments conducted in the fairness evaluation but also background for the taxonomy development and clustering. Below you find the overall structure of the research project:
+The following repository contains the online appendix for the paper ["Not enough Data to be Fair? Evaluating Fairness Implications of Data Scarcity Solutions"](https://scholarspace.manoa.hawaii.edu/server/api/core/bitstreams/1aeb6c4a-976d-4fcd-aea1-8c2bfcd437d2/content). It not only provides the python code for all experiments conducted in the fairness evaluation but also background for the taxonomy development and clustering. Below you find the overall structure of the research project:
 
 ![project outline](researchProcess.png)
 
